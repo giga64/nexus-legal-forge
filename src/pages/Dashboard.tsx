@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ParticleBackground from "@/components/ParticleBackground";
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [selectedSector, setSelectedSector] = useState<string | null>(null);
 
   const sectors = {
@@ -80,8 +82,8 @@ const Dashboard = () => {
   };
 
   const handleAssistantSelect = (sectorId: string, assistantId: string) => {
-    console.log(`Selecionado: ${sectorId} - ${assistantId}`);
-    // Aqui será implementado a navegação para o assistente específico
+    // Navegação para interface específica do assistente
+    navigate(`/assistant/${sectorId}/${assistantId}`);
   };
 
   return (
