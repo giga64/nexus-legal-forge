@@ -6,7 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import ParticleBackground from "@/components/ParticleBackground";
-import RobotAssistant from "@/components/RobotAssistant";
+import RobotAssistant from "@/components/RobotAssistant"; 
+import FileUpload from "@/components/FileUpload";
+import DocumentTemplates from "@/components/DocumentTemplates";
+import { ProcessData } from "@/utils/documentProcessor";
 import { 
   Shield, 
   ArrowLeft, 
@@ -22,6 +25,7 @@ const AssistantChat = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processNumber, setProcessNumber] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
+  const [extractedData, setExtractedData] = useState<ProcessData | null>(null);
   const [messages, setMessages] = useState<Array<{id: number, type: 'user' | 'assistant', content: string}>>([]);
 
   // Assistant configuration based on type
@@ -60,16 +64,38 @@ const AssistantChat = () => {
     setMessages([{
       id: 1,
       type: 'assistant',
-      content: `Olá! Sou o ${currentAssistant?.name}. Como posso ajudá-lo hoje? Por favor, forneça o número do processo ou descreva sua necessidade.`
+      content: `Olá! Sou o ${currentAssistant?.name}. Você pode fazer upload do arquivo do processo ou inserir os dados manualmente. Como posso ajudá-lo hoje?`
     }]);
   }, [currentAssistant]);
+
+  const handleFileProcessed = (data: ProcessData) => {
+    setExtractedData(data);
+    setProcessNumber(data.number);
+    
+    const message = {
+      id: messages.length + 1,
+      type: 'assistant' as const,
+      content: `✅ **Arquivo processado com sucesso!**\n\n📋 **Dados extraídos:**\n- Processo: ${data.number}\n- Autor: ${data.parties.plaintiff}\n- Réu: ${data.parties.defendant}\n- Valor: ${data.value}\n- Assunto: ${data.subject}\n\nAgora você pode selecionar o tipo de documento que deseja gerar.`
+    };
+    
+    setMessages(prev => [...prev, message]);
+  };
+
+  const handleDocumentGenerated = (document: string) => {
+    const message = {
+      id: messages.length + 1,
+      type: 'assistant' as const,
+      content: `📄 **Documento gerado com sucesso!**\n\nO documento foi criado com base nos dados do processo e está pronto para download. Você pode visualizar o preview e fazer o download quando desejar.`
+    };
+    
+    setMessages(prev => [...prev, message]);
+  };
 
   const handleProcessSubmit = async () => {
     if (!processNumber.trim()) return;
 
     setIsProcessing(true);
     
-    // Add user message
     const userMessage = {
       id: messages.length + 1,
       type: 'user' as const,
@@ -78,12 +104,11 @@ const AssistantChat = () => {
     
     setMessages(prev => [...prev, userMessage]);
 
-    // Simulate AI processing
     setTimeout(() => {
       const assistantResponse = {
         id: messages.length + 2,
         type: 'assistant' as const,
-        content: `Analisando o processo ${processNumber}...\n\n✅ Dados extraídos com sucesso!\n\n📋 **Resumo do Processo:**\n- Número: ${processNumber}\n- Tipo: ${getProcessType()}\n- Status: Em andamento\n\n🤖 Estou preparando os documentos necessários. Que tipo de peça você gostaria que eu gere?`
+        content: `Analisando o processo ${processNumber}...\n\n✅ Dados extraídos com sucesso!\n\n📋 **Resumo do Processo:**\n- Número: ${processNumber}\n- Tipo: ${getProcessType()}\n- Status: Em andamento\n\n🤖 Processo pronto para geração de documentos!`
       };
       
       setMessages(prev => [...prev, assistantResponse]);
@@ -100,16 +125,6 @@ const AssistantChat = () => {
       case 'negocial': return 'Negociação/Acordo';
       default: return 'Processo Geral';
     }
-  };
-
-  const handleGenerateDocument = () => {
-    const newMessage = {
-      id: messages.length + 1,
-      type: 'assistant' as const,
-      content: `📄 **Documento Gerado!**\n\n✅ ${getProcessType()} criado com base nos dados do processo ${processNumber}\n\n🔍 **Revisão Automática Concluída:**\n- Formatação: ✅\n- Dados das partes: ✅\n- Fundamentos jurídicos: ✅\n- Pedidos: ✅\n\n💾 Documento pronto para download!`
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
   };
 
   if (!currentAssistant) {
@@ -152,8 +167,9 @@ const AssistantChat = () => {
 
         <div className="container mx-auto p-6">
           <div className="grid lg:grid-cols-3 gap-6">
-            {/* Robot Assistant Panel */}
-            <div className="lg:col-span-1">
+            {/* Left Column - Robot Assistant Panel + Process Data/Templates */}
+            <div className="lg:col-span-1 space-y-6">
+              {/* Robot Assistant */}
               <Card className="glass border-glow">
                 <CardHeader>
                   <CardTitle className="text-center text-foreground">
@@ -172,81 +188,78 @@ const AssistantChat = () => {
                 </CardContent>
               </Card>
 
-              {/* Process Input Panel */}
-              <Card className="glass border-glow mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg text-foreground">
-                    Dados do Processo
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="process" className="text-foreground">
-                      Número do Processo
-                    </Label>
-                    <Input
-                      id="process"
-                      placeholder="0000000-00.0000.0.00.0000"
-                      value={processNumber}
-                      onChange={(e) => setProcessNumber(e.target.value)}
-                      className="glass border-border focus:border-primary"
+              {/* Process Input Panel or Document Templates */}
+              {!extractedData ? (
+                <Card className="glass border-glow">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-foreground">
+                      Dados do Processo
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FileUpload 
+                      onFileProcessed={handleFileProcessed}
+                      isProcessing={isProcessing}
                     />
-                  </div>
+                    
+                    {/* Manual Process Input */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="process" className="text-foreground">
+                          Número do Processo (Manual)
+                        </Label>
+                        <Input
+                          id="process"
+                          placeholder="0000000-00.0000.0.00.0000"
+                          value={processNumber}
+                          onChange={(e) => setProcessNumber(e.target.value)}
+                          className="glass border-border focus:border-primary"
+                        />
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="info" className="text-foreground">
-                      Informações Adicionais
-                    </Label>
-                    <Textarea
-                      id="info"
-                      placeholder="Descreva detalhes específicos do caso..."
-                      value={additionalInfo}
-                      onChange={(e) => setAdditionalInfo(e.target.value)}
-                      className="glass border-border focus:border-primary min-h-[100px]"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="info" className="text-foreground">
+                          Informações Adicionais
+                        </Label>
+                        <Textarea
+                          id="info"
+                          placeholder="Descreva detalhes específicos do caso..."
+                          value={additionalInfo}
+                          onChange={(e) => setAdditionalInfo(e.target.value)}
+                          className="glass border-border focus:border-primary min-h-[100px]"
+                        />
+                      </div>
 
-                  <Button 
-                    onClick={handleProcessSubmit}
-                    disabled={!processNumber.trim() || isProcessing}
-                    className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Analisar Processo
-                      </>
-                    )}
-                  </Button>
-
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 glass border-border hover:border-primary"
-                      onClick={handleGenerateDocument}
-                      disabled={messages.length < 3}
-                    >
-                      <FileText className="w-4 h-4 mr-2" />
-                      Gerar Peça
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="glass border-border hover:border-primary"
-                      disabled={messages.length < 4}
-                    >
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                      <Button 
+                        onClick={handleProcessSubmit}
+                        disabled={!processNumber.trim() || isProcessing}
+                        className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            Processando...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4 mr-2" />
+                            Analisar Processo
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <DocumentTemplates 
+                  processData={extractedData}
+                  assistantType={assistant || ""}
+                  onDocumentGenerated={handleDocumentGenerated}
+                />
+              )}
             </div>
 
-            {/* Chat Panel */}
+            {/* Right Column - Chat Panel */}
             <div className="lg:col-span-2">
               <Card className="glass border-glow h-[600px] flex flex-col">
                 <CardHeader>
@@ -281,7 +294,7 @@ const AssistantChat = () => {
                         <div className="glass border border-border p-4 rounded-lg">
                           <div className="flex items-center space-x-2">
                             <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            <span className="text-foreground">Analisando dados...</span>
+                            <span className="text-foreground">Processando arquivo...</span>
                           </div>
                         </div>
                       </div>
