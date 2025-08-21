@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ParticleBackground from "@/components/ParticleBackground";
 import { Shield, Scale } from "lucide-react";
+
 const Login = () => {
   const navigate = useNavigate();
   const [credentials, setCredentials] = useState({
     email: "",
     password: ""
   });
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Simulate MDR login validation
@@ -19,7 +21,9 @@ const Login = () => {
       navigate("/dashboard");
     }
   };
-  return <div className="min-h-screen relative flex items-center justify-center p-6">
+
+  return (
+    <div className="min-h-screen relative flex items-center justify-center p-6">
       <ParticleBackground />
       
       {/* Background Gradient Overlay */}
@@ -30,8 +34,8 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <div className="relative">
-              
-              
+              <Shield className="w-12 h-12 text-primary animate-pulse-glow" />
+              <Scale className="w-8 h-8 text-accent absolute -top-2 -right-2" />
             </div>
           </div>
           <h1 className="text-5xl font-bold logo-gradient mb-2">
@@ -59,23 +63,42 @@ const Login = () => {
                 <Label htmlFor="email" className="text-foreground">
                   Email/Usuário MDR
                 </Label>
-                <Input id="email" type="email" placeholder="usuario@mdr.sistema" value={credentials.email} onChange={e => setCredentials(prev => ({
-                ...prev,
-                email: e.target.value
-              }))} className="glass border-border focus:border-primary focus:ring-primary" required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="usuario@mdr.sistema"
+                  value={credentials.email}
+                  onChange={(e) => setCredentials(prev => ({
+                    ...prev,
+                    email: e.target.value
+                  }))}
+                  className="glass border-border focus:border-primary focus:ring-primary"
+                  required
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-foreground">
                   Senha
                 </Label>
-                <Input id="password" type="password" placeholder="••••••••" value={credentials.password} onChange={e => setCredentials(prev => ({
-                ...prev,
-                password: e.target.value
-              }))} className="glass border-border focus:border-primary focus:ring-primary" required />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={credentials.password}
+                  onChange={(e) => setCredentials(prev => ({
+                    ...prev,
+                    password: e.target.value
+                  }))}
+                  className="glass border-border focus:border-primary focus:ring-primary"
+                  required
+                />
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300 text-primary-foreground font-semibold py-3 border-glow">
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300 text-primary-foreground font-semibold py-3 border-glow"
+              >
                 Entrar no Sistema
               </Button>
             </form>
@@ -89,6 +112,8 @@ const Login = () => {
           </p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default Login;
