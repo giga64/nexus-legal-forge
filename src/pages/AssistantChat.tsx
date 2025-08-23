@@ -10,6 +10,7 @@ import RobotAssistant from "@/components/RobotAssistant";
 import FileUpload from "@/components/FileUpload";
 import DocumentTemplates from "@/components/DocumentTemplates";
 import { ProcessData } from "@/utils/documentProcessor";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Shield, 
   ArrowLeft, 

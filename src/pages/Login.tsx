@@ -5,18 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ParticleBackground from "@/components/ParticleBackground";
-import { Shield, Scale } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+
 const Login = () => {
   const navigate = useNavigate();
+  const { login, isAdmin } = useAuth();
   const [credentials, setCredentials] = useState({
     email: "",
     password: ""
   });
-  const handleLogin = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate MDR login validation
-    if (credentials.email && credentials.password) {
-      navigate("/dashboard");
+    setIsLoading(true);
+    
+    try {
+      const success = await login(credentials.email, credentials.password);
+      if (success) {
+        toast.success("Login realizado com sucesso!");
+        
+        // Check if user is admin after successful login
+        if (credentials.email === 'admin@jusnexus.com') {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
+      } else {
+        toast.error("Credenciais inválidas. Tente novamente.");
+      }
+    } catch (error) {
+      toast.error("Erro ao fazer login. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
   };
   return <div className="min-h-screen relative flex items-center justify-center p-6">
@@ -75,8 +97,12 @@ const Login = () => {
               }))} className="glass border-border focus:border-primary focus:ring-primary" required />
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300 text-primary-foreground font-semibold py-3 border-glow">
-                Entrar no Sistema
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="w-full bg-gradient-brand hover:scale-105 transition-all duration-300 text-primary-foreground font-semibold py-3 border-glow disabled:opacity-50"
+              >
+                {isLoading ? "Entrando..." : "Entrar no Sistema"}
               </Button>
             </form>
           </CardContent>
